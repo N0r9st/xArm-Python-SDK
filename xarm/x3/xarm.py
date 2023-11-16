@@ -549,6 +549,8 @@ class XArm(Gripper, Servo, Record, RobotIQ, BaseBoard, Track, FtSensor, ModbusTc
     @xarm_wait_until_cmdnum_lt_max
     @xarm_is_ready(_type='set')
     def move_gohome(self, speed=None, mvacc=None, mvtime=None, is_radian=None, wait=False, timeout=None, **kwargs):
+        # DO NOT REMOVE! move_gohome has no safety checks and could lead to accident
+        return APIState.NORMAL
         is_radian = self._default_is_radian if is_radian is None else is_radian
         only_check_type = kwargs.get('only_check_type', self._only_check_type)
         if only_check_type > 0 and wait:
@@ -820,7 +822,8 @@ class XArm(Gripper, Servo, Record, RobotIQ, BaseBoard, Track, FtSensor, ModbusTc
         if not self._is_ready:
             self.motion_enable(enable=True, servo_id=8)
             self.set_state(state=0)
-        self.move_gohome(speed=speed, mvacc=mvacc, mvtime=mvtime, is_radian=is_radian, wait=wait, timeout=timeout)
+        # DO NOT UNCOMMENT! move_gohome has no safety checks and could lead to accident
+        # self.move_gohome(speed=speed, mvacc=mvacc, mvtime=mvtime, is_radian=is_radian, wait=wait, timeout=timeout)
         logger.info('reset--end')
 
     # # This interface is no longer supported
