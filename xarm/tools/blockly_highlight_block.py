@@ -25,7 +25,6 @@ HIGHLIGHT_BLOCKS = [
     'set_suction_cup',
     'get_suction_cup',
     'check_air_pump_state',
-    'set_lite6_gripper',
 
     'gpio_get_analog',
     'gpio_get_digital',

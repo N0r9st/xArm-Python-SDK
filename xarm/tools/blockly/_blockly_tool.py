@@ -6,7 +6,6 @@
 #
 # Author: Vinman <vinman.wen@ufactory.cc> <vinman.cub@gmail.com>
 
-import json
 from ._blockly_handler import _BlocklyHandler
 
 
@@ -22,14 +21,8 @@ class BlocklyTool(_BlocklyHandler):
 
     def to_python(self, path=None, arm=None, init=True, wait_seconds=1, mode=0, state=0, error_exit=True, stop_exit=True, **kwargs):
         if not self._is_converted:
-            self._is_exec = kwargs.get('is_exec', False)
             # highlight_callback: only use pack to run blockly in studio
             self._highlight_callback = kwargs.get('highlight_callback', None)
-            # axis_type: Obtain the type of mechanical arm axis for end leveling use
-            if 'axis_type' in kwargs:
-                self.axis_type = kwargs.get('axis_type', [])
-            else:
-                self.axis_type = []
             # loop_max_frequency: limit frequency in loop, only use pack to run blockly in studio
             if 'loop_max_frequency' in kwargs:
                 loop_max_freq = kwargs.get('loop_max_frequency', -1)
@@ -44,7 +37,7 @@ class BlocklyTool(_BlocklyHandler):
             self._parse_block()
             self._finish_robot_main_run_codes(error_exit, stop_exit)
             self._init_robot_main_class_codes(init=init, wait_seconds=wait_seconds, mode=mode, state=state, error_exit=error_exit, stop_exit=stop_exit)
-            self._init_main_codes(arm=arm)
+            self._init_main_codes(arm=arm, is_exec=kwargs.get('is_exec', False))
             self._codes.extend(self._init_code_list)
             self._codes.extend(self._main_init_code_list)
             self._codes.extend(self._main_func_code_list)
@@ -123,15 +116,8 @@ class BlocklyTool(_BlocklyHandler):
         self._append_main_init_code('        self._tcp_acc = 2000')
         self._append_main_init_code('        self._angle_speed = 20')
         self._append_main_init_code('        self._angle_acc = 500')
-        self._append_main_init_code('        self._vars = {}'.format({var: 0 for var in self._parse_variables()}))
-        if len(self._funcs):
-            self._append_main_init_code('        self._funcs = {')
-            for key, val in self._funcs.items():
-                self._append_main_init_code('            {}: self.{},'.format(json.dumps(key, ensure_ascii=False), val))
-            self._append_main_init_code('        }')
-        else:
-            self._append_main_init_code('        self._funcs = {}')
-        self._append_main_init_code('        self._robot_init()')
+        self._append_main_init_code('        self._variables = {}'.format({var: 0 for var in self._parse_variables()}))
+        self._append_main_init_code('        self._robot_init()')            
         if len(self._tgpio_digital_callbacks):
             self._append_main_init_code('        self._tgpio_digital_callbacks = []')
         if len(self._tgpio_analog_callbacks):
@@ -167,7 +153,6 @@ class BlocklyTool(_BlocklyHandler):
         self.__define_check_code_func()
         self.__define_is_prime_func()
         self.__define_pprint_func()
-        self.__define_property()
         self.__define_is_alive_property()
 
     def __define_is_prime_func(self):
@@ -195,20 +180,6 @@ class BlocklyTool(_BlocklyHandler):
             self._append_main_init_code('            if bin_val_[i] != digitals_bin[i]:')
             self._append_main_init_code('                return False')
             self._append_main_init_code('        return True\n')
-    
-    def __define_property(self):
-        # define property: self.arm -> self._arm
-        self._append_main_init_code('    @property')
-        self._append_main_init_code('    def arm(self):')
-        self._append_main_init_code('        return self._arm\n')
-        # define property: self.VARS -> self._vars
-        self._append_main_init_code('    @property')
-        self._append_main_init_code('    def VARS(self):')
-        self._append_main_init_code('        return self._vars\n')
-        # define property: self.FUNCS -> self._funcs
-        self._append_main_init_code('    @property')
-        self._append_main_init_code('    def FUNCS(self):')
-        self._append_main_init_code('        return self._funcs\n')
 
     def __define_callback_thread_func(self):
         # Define callback thread function
@@ -366,10 +337,10 @@ class BlocklyTool(_BlocklyHandler):
         self._append_main_init_code('            self.pprint(\'{}, code={}, connected={}, state={}, error={}, ret1={}. ret2={}\'.format(label, code, self._arm.connected, self._arm.state, self._arm.error_code, ret1, ret2))')
         self._append_main_init_code('        return self.is_alive\n')
 
-    def _init_main_codes(self, arm=None):
+    def _init_main_codes(self, arm=None, is_exec=False):
         # exec can not run main function, if run in exec(), the parameter is_exec must set True
         self._append_main_code('\n', indent=-1)
-        if not self._is_exec:
+        if not is_exec:
             self._append_main_code('if __name__ == \'__main__\':', indent=-1)
             indent = 0
         else:

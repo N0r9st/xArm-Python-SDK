@@ -577,11 +577,11 @@ ControllerErrorCodeMap = {
     23: {
         'en': {
             'title': 'Joints Angle Exceed Limit',
-            'desc': 'Please go to the "Live Control" page and press the "INITIAL POSITION" button to let the robot go to the initial position.'
+            'desc': 'Please click the "ZERO" button to return to the zero pozition.'
         },
         'cn': {
             'title': '关节角度超出限制',
-            'desc': '请到”实时控制“界面按住”初始点“按钮让机械臂回到初始点。'
+            'desc': '请点击”零点“按钮回到关节零点。'
         }
     },
     24: {
@@ -732,36 +732,6 @@ ControllerErrorCodeMap = {
         'cn': {
             'title': '电源板主从IC通信异常',
             'desc': '请联系技术支持。'
-        }
-    },
-    40: {
-        'en': {
-            'title': 'Solution failure of error-free joint trajectory',
-            'desc': 'Please adjust the position.'
-        },
-        'cn': {
-            'title': '无报错的关节轨迹求解失败',
-            'desc': '请调整点位。'
-        }
-    },
-    41: {
-        'en': {
-            'title': 'The content of the friction file is invalid.',
-            'desc': 'Please restart the robot with the Emergency Stop Button on the Control Box. If multiple reboots do not work, please contact technical support.'
-        },
-        'cn': {
-            'title': '摩擦力文件内容无效。',
-            'desc': '请通过控制器上的紧急停止按钮重启机械臂。如多次重启无效，请联系技术支持'
-        }
-    },
-    42: {
-        'en': {
-            'title': 'The content of the calibration file is invalid.',
-            'desc': 'Please restart the robot with the Emergency Stop Button on the Control Box. If multiple reboots do not work, please contact technical support.'
-        },
-        'cn': {
-            'title': '校准文件内容无效。',
-            'desc': '请通过控制器上的紧急停止按钮重启机械臂。如多次重启无效，请联系技术支持'
         }
     },
     50: {

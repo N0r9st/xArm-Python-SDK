@@ -22,7 +22,7 @@ class GPIO(Base):
             'analog': [9999] * 2
         }
         self.tgpio_state = {
-            'digital': [-1] * 5,
+            'digital': [-1] * 2,
             'analog': [9999] * 2
         }
 
@@ -76,10 +76,10 @@ class GPIO(Base):
         #             versions = [ret1[1], ret2[1], ret3[1]]
 
         return code, '.'.join(map(str, versions))
-    
+
     @xarm_is_connected(_type='get')
     def get_tgpio_digital(self, ionum=None):
-        assert ionum is None or ionum == 0 or ionum == 1 or ionum == 2 or ionum == 3 or ionum == 4, 'The value of parameter ionum can only be 0 or 1 or None.'
+        assert ionum is None or ionum == 0 or ionum == 1 or ionum == 2, 'The value of parameter ionum can only be 0 or 1 or None.'
         if self.check_is_simulation_robot():
             return 0, [0, 0] if ionum is None else 0
         if ionum == 2:
@@ -90,30 +90,16 @@ class GPIO(Base):
             ret = self.arm_cmd.tgpio_get_digital()
             if ret[0] == 0:
                 self.tgpio_state['digital'] = ret[1:]
-            return ret[0], ret[1:] if ionum is None else ret[ionum+1 if ionum < 3 else ionum]
-    
-    @xarm_is_connected(_type='get')
-    def get_tgpio_output_digital(self, ionum=None):
-        ret_li = [0, 0, 0, 0, 0]
-        assert ionum is None or ionum == 0 or ionum == 1 or ionum == 2 or ionum == 3 or ionum == 4, 'The value of parameter ionum can only be 0 or 1 or None.'
-        if self.check_is_simulation_robot():
-            return 0, [0, 0] if ionum is None else 0
-        code, ret = self.arm_cmd.tgpio_addr_r16(0x0A18)
-        ret_li[0] = ret & 0b01
-        ret_li[1] = ret >> 1 & 0b01
-        ret_li[2] = ret >> 4 & 0b01
-        ret_li[3] = ret >> 2 & 0b01
-        ret_li[4] = ret >> 3 & 0b01
-        return code, ret_li if ionum is None else ret_li[ionum]
-    
+            return ret[0], ret[1:] if ionum is None else ret[ionum+1]
+
     @xarm_wait_until_not_pause
     @xarm_wait_until_cmdnum_lt_max
     @xarm_is_ready(_type='set')
     @xarm_is_not_simulation_mode(ret=0)
     def set_tgpio_digital(self, ionum, value, delay_sec=0):
-        assert ionum == 0 or ionum == 1 or ionum == 2 or ionum == 3 or ionum == 4, 'The value of parameter ionum can only be 0 or 1.'
+        assert ionum == 0 or ionum == 1, 'The value of parameter ionum can only be 0 or 1.'
         if delay_sec is not None and delay_sec > 0:
-            ret = self.arm_cmd.tgpio_delay_set_digital(ionum if ionum < 2 else ionum-1, value, delay_sec)
+            ret = self.arm_cmd.tgpio_delay_set_digital(ionum, value, delay_sec)
             self.log_api_info('API -> set_tgpio_digital(ionum={}, value={}, delay_sec={}) -> code={}'.format(ionum, value, delay_sec, ret[0]), code=ret[0])
         else:
             ret = self.arm_cmd.tgpio_set_digital(ionum+1, value)
@@ -275,52 +261,6 @@ class GPIO(Base):
         # print('cgpio_digital_input_fun:', ret[11])
         # print('cgpio_digital_output_fun:', ret[12])
         return code, states
-
-    @xarm_is_connected(_type='get')
-    def get_cgpio_li_state(self, Ci_Li, timeout=3, is_ci=True):
-        start_time = time.monotonic()
-        is_first = True
-        while is_first or time.monotonic() - start_time < timeout:
-            code = 0
-            is_first = False
-            if not self.connected or self.state == 4:
-                return False
-            codes, ret = self.get_cgpio_state()
-            digitals = [ret[3] >> i & 0x0001 if ret[10][i] in [0, 255] else 1 for i in
-                        range(len(ret[10]))]
-            if codes == XCONF.UxbusState.ERR_CODE:
-                return False
-            if codes == 0:
-                for CI_num, CI in enumerate(Ci_Li):
-                    if int(CI) != digitals[CI_num if is_ci else CI_num + 8]:
-                        code = -1
-                        break
-                if code == 0:
-                    return True
-            time.sleep(0.1)
-        return False
-
-    @xarm_is_connected(_type='get')
-    def get_tgpio_li_state(self, Ti_Li, timeout=3):
-        start_time = time.monotonic()
-        is_first = True
-        while is_first or time.monotonic() - start_time < timeout:
-            code = 0
-            is_first = False
-            if not self.connected or self.state == 4:
-                return False
-            codes, ret = self.get_tgpio_digital()
-            if codes == XCONF.UxbusState.ERR_CODE:
-                return False
-            if codes == 0:
-                for TI_num, TI in enumerate(Ti_Li):
-                    if int(TI) != ret[TI_num]:
-                        code = -1
-                        break
-                if code == 0:
-                    return True
-            time.sleep(0.1)
-        return False
 
     @xarm_wait_until_not_pause
     @xarm_wait_until_cmdnum_lt_max
